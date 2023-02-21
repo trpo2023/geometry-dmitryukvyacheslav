@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 
 enum ShapeTypes {
 	Circle = 10,
@@ -16,8 +17,8 @@ typedef struct Point{
 typedef struct Shape{
 	enum ShapeTypes type;
 	int ptscnt;
-	int radius;
-	struct Point pts[];
+	float radius;
+	point* pts;
 } shape;
 
 
@@ -62,7 +63,8 @@ void throwError(int column, char* line, char* expected, char* got){
 		указатель на переменную составного типа shape.
 */
 shape* parseInputString(char* input, int startSymbol){
-
+	
+	shape* s1 = malloc(sizeof(shape));
 	/* 	Читаем входную строку до первого непробельного символа.
 		Выводим ошибку, если нашли конец строки или не букву на латинице.*/
 	int i = 0;	
@@ -100,10 +102,9 @@ shape* parseInputString(char* input, int startSymbol){
 			expstr);
 		return NULL;
 	}
-	shape s1;
-	if (!strcmp(token1, "circle")) {s1.type = Circle; s1.ptscnt = 2;}
-	else if	(!strcmp(token1, "triangle")) {s1.type = Triangle; s1.ptscnt = 4;}
-	else if	(!strcmp(token1, "polygon")) {s1.type = Polygon; s1.ptscnt = 0;}
+	if (!strcmp(token1, "circle")) {s1->type = Circle; s1->ptscnt = 1;}
+	else if	(!strcmp(token1, "triangle")) {s1->type = Triangle; s1->ptscnt = 4;}
+	else if	(!strcmp(token1, "polygon")) {s1->type = Polygon; s1->ptscnt = 0;}
 	else {
 		char expstr[128];
 		sprintf(expstr, "встречена строка '%s'", token1);
@@ -129,28 +130,125 @@ shape* parseInputString(char* input, int startSymbol){
 		return NULL;
 	}
 	i++;
-	/* 	Начинаем записывать аргументы
-		Не нашли число или нашли что-то другое - ошибка */
-	while(input[i] == ' ' && input[i] != '\0') i++;
-	
-	if (!isdigit(input[i])) {
-		char expstr[64];
-		sprintf(expstr, "встречено '%c'", input[i]);
-		throwError(i, input, "ожидалась цифра", expstr);
-		return NULL;
-	}
-	
+
 	// Дальше читаем строку из цифр и максимум одной точки до пробела.
 	// Но если наш аргумент последний, то не забываем проверять ещё и на ')'.
 
-	// Напоминалочка себе: поместить всё это в цикл по количеству аргументов.
-	return 1;
+	s1->pts = malloc(sizeof(point)*s1->ptscnt);
+
+	for(int c = 0; c < s1->ptscnt; c++) {
+		for (int xy = 0; xy < 2; xy++) {
+			while(input[i] == ' ' && input[i] != '\0') i++;
+		
+			if (!isdigit(input[i])) {
+				char expstr[64];
+				sprintf(expstr, "встречено '%c'", input[i]);
+				throwError(i, input, "ожидалась цифра", expstr);
+				return NULL;
+			}
+			
+			char digit[128];
+			int wasThereAPoint = 0;
+			j = 0;
+			while(isdigit(input[i]) || input[i] == '.') {
+				if (input[i] == '.') wasThereAPoint++;
+				if (wasThereAPoint > 1) {
+					throwError(i, input, "встречена '.'", "ожидалась дробная часть");
+					return NULL;
+				}
+				digit[j] = input[i];
+				j++;
+				i++;
+			}
+			if (!xy) s1->pts[c].x = atof(digit);
+			else s1->pts[c].y = atof(digit);
+			i++;
+		}
+		// ожидаем запятую, если точка не последняя и не круг
+		if (c != s1->ptscnt-1 && s1->type != Circle) {
+			while(input[i] == ' ' && input[i] != '\0') i++;
+				if (input[i] == '\0') {
+				throwError(i, input, "ожидалось ','", 
+					"встречен конец строки");
+				return NULL;
+			}
+			if (input[i] != ','){
+				char expstr[64];
+					sprintf(expstr, "встречено '%c'", input[i]);
+					throwError(i, input, "ожидалось ','", expstr);
+					return NULL;
+			return NULL;
+			}
+		}
+	}
+	if (s1->type == Circle) {
+		// вычитываем ещё одно число 
+		while(input[i] == ' ' && input[i] != '\0') i++;
+		
+		if (!isdigit(input[i])) {
+			char expstr[64];
+			sprintf(expstr, "встречено '%c'", input[i]);
+			throwError(i, input, "ожидалась цифра", expstr);
+			return NULL;
+		}
+		
+		char digit2[128];
+		int wasThereAPoint = 0;
+		j = 0;
+		while(isdigit(input[i]) || input[i] == '.') {
+			if (input[i] == '.') wasThereAPoint++;
+			if (wasThereAPoint > 1) {
+				throwError(i, input, "встречена '.'", "ожидалась дробная часть");
+				return NULL;
+			}
+			digit2[j] = input[i];
+			j++;
+			i++;
+		}
+		s1->radius = atof(digit2);
+	}
+	
+	// ожидаем закрывающую скобку
+	while(input[i] == ' ' && input[i] != '\0') i++;
+		if (input[i] == '\0') {
+		throwError(i, input, "ожидалось ')'", 
+			"встречен конец строки");
+		return NULL;
+	}
+	if (input[i] != ')'){
+		char expstr[64];
+			sprintf(expstr, "встречено '%c'", input[i]);
+			throwError(i, input, "ожидалось ')'", expstr);
+			return NULL;
+	return NULL;
+	}
+	return s1;
 }
 
 int main(void){
 	// Между токенами может быть сколько угодно пробелов
-	char* input = "    circle   (a  b ";
-	shape* temp = parseInputString(input, 0);
-	if (temp == NULL) return -1;
-	else return 0;
+	shape* s1 = NULL;
+	char* input = "circle(1.1 2.1, 1.24)";
+	s1 = parseInputString(input, 0);
+	if (s1 == NULL) return -1;
+	printf("Тип фигуры:\t");
+	switch (s1->type)
+	{
+	case Circle:
+		printf("круг\nРадиус:\t\t%.2f\n", s1->radius);
+		break;
+	
+	case Triangle:
+		printf("треугольник\n");
+		break;
+
+	case Polygon:
+		printf("многоугольник\n");
+		break;
+	}
+	printf("Точки:\t\t");
+	for (int i = 0; i < s1->ptscnt; i++)
+		printf("(%.2f; %.2f)", s1->pts[i].x, s1->pts[i].y);
+	printf("\n");
+	return 0;
 }
