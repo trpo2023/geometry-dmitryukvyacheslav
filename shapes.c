@@ -142,7 +142,11 @@ shape* parseInputString(char* input, int startSymbol)
         for (int xy = 0; xy < 2; xy++) {
             while (input[i] == ' ' && input[i] != '\0')
                 i++;
-
+            float is_negative = 1.0;
+            if (input[i] == '-') {
+                is_negative = -1.0;
+                i++;
+            }
             if (!isdigit(input[i])) {
                 char expstr[64];
                 sprintf(expstr, "встречено '%c'", input[i]);
@@ -169,9 +173,9 @@ shape* parseInputString(char* input, int startSymbol)
                 i++;
             }
             if (!xy)
-                s1->pts[c].x = atof(digit);
+                s1->pts[c].x = atof(digit) * is_negative;
             else
-                s1->pts[c].y = atof(digit);
+                s1->pts[c].y = atof(digit) * is_negative;
         }
         // ожидаем запятую, если круг или точка последняя
         // иначе ожидаем ')'
@@ -196,14 +200,17 @@ shape* parseInputString(char* input, int startSymbol)
         // вычитываем ещё одно число
         while (input[i] == ' ' && input[i] != '\0')
             i++;
-
+        int is_negative = 1.0;
+        if (input[i] == '-') {
+            is_negative = -1.0;
+            i++;
+        }
         if (!isdigit(input[i])) {
             char expstr[64];
             sprintf(expstr, "встречено '%c'", input[i]);
             throwError(i, input, "ожидалась цифра", expstr);
             return NULL;
         }
-
         char digit2[128];
         int wasThereAPoint = 0;
         j = 0;
@@ -219,7 +226,7 @@ shape* parseInputString(char* input, int startSymbol)
             j++;
             i++;
         }
-        s1->radius = atof(digit2);
+        s1->radius = atof(digit2) * is_negative;
     }
 
     // ожидаем закрывающую скобку
