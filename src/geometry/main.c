@@ -2,7 +2,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-int main(void)
+4toto main(void)
 {
     printf("1. ");
     char* buffer = NULL;
