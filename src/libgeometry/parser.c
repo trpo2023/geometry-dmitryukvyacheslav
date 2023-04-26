@@ -1,5 +1,6 @@
 #include <ctype.h>
-#include <libgeometry/shapes.h>
+#include <libgeometry/parser.h>
+#include <libgeometry/lexer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,17 +22,20 @@
 
         Ничего не возвращает.
 */
-void throwError(int column, char* line, char* expected, char* got)
+void throwError(int column, char* line)
 {
-    // printf("\n");
     if (line != NULL) {
         printf("%s", line);
         for (int i = 0; i < column; i++)
             printf(" ");
         printf("^\n");
-        printf("Ошибка в столбце %d:\n\t%s;\n\t%s.\n", column, expected, got);
+        printf("Ошибка в столбце %d:", column);
     } else
         printf("Ошибка: пустой ввод.\n");
+}
+void expected(int column, char* line, char* expected, char* got){
+    throwError(column, line);
+    printf("\n\tожидалось %s;\n\tполучено %s.\n", expected, got);
 }
 
 /*
@@ -48,36 +52,30 @@ void throwError(int column, char* line, char* expected, char* got)
 shape* parseInputString(char* input)
 {
     shape* s1 = malloc(sizeof(shape));
-    /* 	Читаем входную строку до первого непробельного символа.
-            Выводим ошибку, если нашли конец строки или не букву на латинице.*/
+
     int i = 0;
     while (input[i] == ' ' && input[i] != '\0')
         i++;
     if (!isalpha(input[i])) {
-        // Вообще ничего не нашли
+        
         if (input[i] == '\0') {
-            throwError(
-                    i,
-                    NULL,
-                    "ожидалась строка 'circle', 'triangle' или 'polygon'",
-                    "встречен конец строки");
+            expected(i,NULL,"'circle', 'triangle' или 'polygon'","конец строки");
         }
-        // Нашли неалфавитный символ
-        else
-            throwError(
-                    i,
-                    input,
-                    "ожидалась строка 'circle', 'triangle' или 'polygon'",
-                    "встречен неалфавитный символ");
+        else 
+            expected(i, input, "'circle', 'triangle' или 'polygon'","неалфавитный символ");
         return NULL;
     }
-
     /* 	Читаем первый токен до первого пробела или управляющего символа.
             На неалфавитный бред выдаём ошибку.
             На алфавитные строки сильно длинее наших имён выдаём ошибку.
             На строки, не соответствующие нашим именам выдаём ошибку.
      */
-
+    /*
+        REFACTOR ME
+        Read token until ' ' or delim should be made a separate fn
+        that is used in various other funcs that get type, ...
+    */
+    
     int tempColumnForError = i;
     char token1[16];
     int j = 0;
@@ -116,8 +114,6 @@ shape* parseInputString(char* input)
         return NULL;
     }
 
-    // printf("[ОТЛАДКА] type %d, ptscnt %d\n\n",	s1.type, s1.ptscnt);
-
     // Ищем '(', не не находим или находим другое - ошибка
     while (input[i] == ' ' && input[i] != '\0')
         i++;
@@ -137,7 +133,6 @@ shape* parseInputString(char* input)
     // Но если наш аргумент последний, то не забываем проверять ещё и на ')'.
 
     s1->pts = malloc(sizeof(point) * s1->ptscnt);
-
     for (int c = 0; c < s1->ptscnt; c++) {
         for (int xy = 0; xy < 2; xy++) {
             while (input[i] == ' ' && input[i] != '\0')
@@ -240,7 +235,6 @@ shape* parseInputString(char* input)
         char expstr[64];
         sprintf(expstr, "встречено '%c'", input[i]);
         throwError(i, input, "ожидалось ')'", expstr);
-        return NULL;
         return NULL;
     }
     return s1;

@@ -9,22 +9,23 @@ int main(void)
     size_t len;
     getline(&buffer, &len, stdin);
 
-    shape* s1 = NULL;
-    s1 = parseInputString(buffer);
-    if (s1 == NULL)
+    shape* object = NULL;
+    object = parseInputString(buffer);
+    if (object == NULL)
         return -1;
 
-    switch (s1->type) {
+    switch (object->type) {
     case Circle:
-        if (s1->radius <= 0) {
+        if (object->radius <= 0) {
             printf("\tradius is less or equal to 0: not calculating\n");
         } else {
-            printf("\tperimeter = %.4f\n", 2.0 * M_PI * s1->radius);
-            printf("\tarea = %.4f\n", M_PI * s1->radius * s1->radius);
+            printf("\tperimeter = %.4f\n", 2.0 * M_PI * object->radius);
+            printf("\tarea = %.4f\n", M_PI * object->radius * object->radius);
         }
         break;
     default:
         printf("not implemented\n");
     }
+    for 
     return 0;
 }

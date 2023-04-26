@@ -7,11 +7,14 @@ bin/geometry: ./obj/src/geometry/main.o ./obj/src/libgeometry/libgeometry.a
 ./obj/src/geometry/main.o: ./src/geometry/main.c
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $< 
 
-./obj/src/libgeometry/libgeometry.a: ./obj/src/libgeometry/shapes.o
+./obj/src/libgeometry/libgeometry.a: ./obj/src/libgeometry/parser.o ./obj/src/libgeometry/lexer.o
 	ar rcs $@ $^
 
-./obj/src/libgeometry/shapes.o: ./src/libgeometry/shapes.c
+./obj/src/libgeometry/parser.o: ./src/libgeometry/parser.c
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $< 
+
+./obj/src/libgeometry/lexer.o: ./src/libgeometry/lexer.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $< 	
 
 clean:
 	rm -rf ./obj/src/geometry/*.d ./obj/src/geometry/*.o ./obj/src/libgeometry/*.d ./obj/src/libgeometry/*.a ./obj/src/libgeometry/*.o  ./bin/geometry
