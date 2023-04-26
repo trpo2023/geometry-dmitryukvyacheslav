@@ -1,5 +1,5 @@
-#include <libgeometry/shapes.h>
 #include <ctype.h>
+#include <libgeometry/shapes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
