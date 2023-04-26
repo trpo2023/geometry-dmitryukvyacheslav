@@ -1,5 +1,5 @@
-#include "shapes.h"
 #include <ctype.h>
+#include <libgeometry/shapes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,7 +45,7 @@ void throwError(int column, char* line, char* expected, char* got)
         Возвращает:
                 указатель на переменную составного типа shape.
 */
-shape* parseInputString(char* input, int startSymbol)
+shape* parseInputString(char* input)
 {
     shape* s1 = malloc(sizeof(shape));
     /* 	Читаем входную строку до первого непробельного символа.

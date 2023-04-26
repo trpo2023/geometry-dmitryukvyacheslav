@@ -1,8 +1,7 @@
-#include "shapes.h"
+#include <libgeometry/shapes.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 int main(void)
 {
     printf("1. ");
@@ -11,7 +10,7 @@ int main(void)
     getline(&buffer, &len, stdin);
 
     shape* s1 = NULL;
-    s1 = parseInputString(buffer, 0);
+    s1 = parseInputString(buffer);
     if (s1 == NULL)
         return -1;
 

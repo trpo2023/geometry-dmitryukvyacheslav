@@ -1,2 +1,10 @@
 # Игнорировать исполняемый файл
 ./geometry
+.vscode/c_cpp_properties.json
+.vscode/settings.json
+bin/geometry
+obj/src/geometry/main.d
+obj/src/geometry/main.o
+obj/src/libgeometry/libgeometry.a
+obj/src/libgeometry/shapes.d
+obj/src/libgeometry/shapes.o

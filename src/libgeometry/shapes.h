@@ -1,3 +1,5 @@
+#pragma once
+
 enum ShapeTypes { Circle = 10, Triangle = 11, Polygon = 12 };
 
 typedef struct Point {
@@ -12,4 +14,4 @@ typedef struct Shape {
     point* pts;
 } shape;
 
-shape* parseInputString(char* input, int startSymbol);
+shape* parseInputString(char* input);
