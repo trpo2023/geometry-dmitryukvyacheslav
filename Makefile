@@ -1,6 +1,6 @@
 CFLAGS = -Wall -Wextra -Werror -I./src
 CPPFLAGS = -MMD
-
+.PHONY: clean
 bin/geometry: ./obj/src/geometry/main.o ./obj/src/libgeometry/libgeometry.a
 	$(CC) $(CFLAGS) -o $@ $^ 
 
