@@ -20,3 +20,5 @@ obj/src/test/main.o
 obj/src/test/tests.d
 obj/src/test/tests.o
 .exlib-clang-format
+bin/test
+echo

@@ -13,7 +13,8 @@ bin/geometry: ./obj/src/geometry/main.o ./obj/src/libgeometry/libgeometry.a
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ -lm
 
 test: ./bin/test
-
+	./bin/test
+	
 ./bin/test: ./obj/src/test/main.o ./obj/src/test/tests.o ./obj/src/libgeometry/libgeometry.a
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ 
 
