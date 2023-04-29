@@ -10,18 +10,32 @@ else
 endif
 
 bin/geometry: ./obj/src/geometry/main.o ./obj/src/libgeometry/libgeometry.a
-	$(CC) $(CFLAGS) -o $@ $^ 
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ -lm
+
+test: ./bin/test
+
+./bin/test: ./obj/src/test/main.o ./obj/src/test/tests.o ./obj/src/libgeometry/libgeometry.a
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ 
+
+./obj/src/test/main.o: ./src/test/main.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $< 
+	
+./obj/src/test/tests.o: ./src/test/tests.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $< 
 
 ./obj/src/geometry/main.o: ./src/geometry/main.c
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $< 
 
-./obj/src/libgeometry/libgeometry.a: ./obj/src/libgeometry/parser.o ./obj/src/libgeometry/lexer.o
+./obj/src/libgeometry/libgeometry.a: ./obj/src/libgeometry/parser.o ./obj/src/libgeometry/lexer.o ./obj/src/libgeometry/intersect.o
 	ar rcs $@ $^
 
 ./obj/src/libgeometry/parser.o: ./src/libgeometry/parser.c
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $< 
 
 ./obj/src/libgeometry/lexer.o: ./src/libgeometry/lexer.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $< 	
+
+./obj/src/libgeometry/intersect.o: ./src/libgeometry/intersect.c
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $< 	
 
 clean:

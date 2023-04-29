@@ -20,14 +20,12 @@ static void errorBody(int column, char* line)
 void expected(int column, char* line, char* expected, char* got){
     errorBody(column, line);
     printf("\nexpected %s; got '%s'.\n", expected, got);
-    exit(-1);
 }
 static void expected_char(int column, char* line, char expected, char got){
     errorBody(column, line);
     printf("\nexpected '%c'", expected); 
     if (got != '\0') printf("; got '%c'.\n", got);
     else printf("\n");
-    exit(-1);
 }
 
 // strtok special needs edition
@@ -90,7 +88,7 @@ int lex_get_type(char** line, shape* object){
     return -1;
 }
 
-static double lex_get_double(char** line, char delim, char* origptr){
+static double lex_get_double(char** line, char delim, char* origptr, int* errflag){
     char buf[64] = {'\0'};
     int read = readTokenUntil(line, delim, buf, origptr);
     char* endptr;
@@ -103,20 +101,24 @@ static double lex_get_double(char** line, char delim, char* origptr){
         errstr[10] = delim;
         char errstr2[] = {*(endptr), '\0'};
         expected((*line - origptr) + (endptr-buf) - read+1, origptr, errstr, errstr2);
+        *errflag = 1;
     }
     return d;
 }
 int lex_get_last_point(char** line, shape* object, char* origptr){
-    object->pts[object->ptscnt-1].x = lex_get_double(line, ' ', origptr);
-    object->pts[object->ptscnt-1].y = lex_get_double(line, ')', origptr);
-    return 0;
+    int errflag = 0;
+    object->pts[object->ptscnt-1].x = lex_get_double(line, ' ', origptr, &errflag);
+    object->pts[object->ptscnt-1].y = lex_get_double(line, ')', origptr, &errflag);
+    return errflag;
 }
 int lex_get_point(char** line, shape* object, int i, char* origptr){
-    object->pts[i].x = lex_get_double(line, ' ', origptr);
-    object->pts[i].y = lex_get_double(line, ',', origptr);
-    return 0;
+    int errflag = 0;
+    object->pts[i].x = lex_get_double(line, ' ', origptr, &errflag);
+    object->pts[i].y = lex_get_double(line, ',', origptr, &errflag);
+    return errflag;
 }
 int lex_get_radius(char** line, shape* object, char* origptr){
-    object->radius = lex_get_double(line, ')', origptr);
-    return 0;
+    int errflag = 0;
+    object->radius = lex_get_double(line, ')', origptr, &errflag);
+    return errflag;
 }   
