@@ -1,6 +1,14 @@
-CFLAGS = -Wall -Wextra -Werror -I./src
+CFLAGS = -Wall -Wextra -I./src
 CPPFLAGS = -MMD
 .PHONY: clean
+
+DEBUG ?= 1
+ifeq ($(DEBUG),1)
+    CFLAGS += -g3 -gdwarf -DDEBUG
+else
+    CFLAGS += -DNDEBUG -Werror
+endif
+
 bin/geometry: ./obj/src/geometry/main.o ./obj/src/libgeometry/libgeometry.a
 	$(CC) $(CFLAGS) -o $@ $^ 
 

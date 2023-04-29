@@ -1,241 +1,30 @@
-#include <ctype.h>
 #include <libgeometry/parser.h>
 #include <libgeometry/lexer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
-/*
-        Вывести ошибку вида:
-
-        circlee(1.0 2.0, 3)
-        ^
-        Ошибка в столбце 0:
-                ожидалась строка 'circle', 'triangle' или 'polygon';
-                встречена строка 'circlee'.
-
-        Принимает:
-                int 	- индекс символа (колонки), на котором произошла ошибка;
-                char* 	- номер
-                char* 	- строка с указанием того, что ожидалось встретить;
-                char*	- строка с указанием того, что было получено.
-
-        Ничего не возвращает.
-*/
-void throwError(int column, char* line)
-{
-    if (line != NULL) {
-        printf("%s", line);
-        for (int i = 0; i < column; i++)
-            printf(" ");
-        printf("^\n");
-        printf("Ошибка в столбце %d:", column);
-    } else
-        printf("Ошибка: пустой ввод.\n");
-}
-void expected(int column, char* line, char* expected, char* got){
-    throwError(column, line);
-    printf("\n\tожидалось %s;\n\tполучено %s.\n", expected, got);
-}
-
-/*
-        Получить первую фигуру из строки, начиная с определённого символа в ней.
-
-        Принимает:
-                char* 	- указатель на строку;
-                int		- её длину;
-                int		- индекс начального символа.
-
-        Возвращает:
-                указатель на переменную составного типа shape.
-*/
 shape* parseInputString(char* input)
 {
-    shape* s1 = malloc(sizeof(shape));
-
-    int i = 0;
-    while (input[i] == ' ' && input[i] != '\0')
-        i++;
-    if (!isalpha(input[i])) {
-        
-        if (input[i] == '\0') {
-            expected(i,NULL,"'circle', 'triangle' или 'polygon'","конец строки");
-        }
-        else 
-            expected(i, input, "'circle', 'triangle' или 'polygon'","неалфавитный символ");
+    char* orig_pointer = input;
+    shape* object = malloc(sizeof(shape));
+    int read;
+    int i;
+    printf("Parsing '%s'\n", input);
+    if (lex_get_type(&input, object) < 0) return NULL;
+    if (object->type == Polygon) {
+        printf("[!] Polygons are not supported due to budget cuts and time constraints. Sorry!\n");
         return NULL;
     }
-    /* 	Читаем первый токен до первого пробела или управляющего символа.
-            На неалфавитный бред выдаём ошибку.
-            На алфавитные строки сильно длинее наших имён выдаём ошибку.
-            На строки, не соответствующие нашим именам выдаём ошибку.
-     */
-    /*
-        REFACTOR ME
-        Read token until ' ' or delim should be made a separate fn
-        that is used in various other funcs that get type, ...
-    */
-    
-    int tempColumnForError = i;
-    char token1[16];
-    int j = 0;
-    while (isalpha(input[i]) && j < 15) {
-        token1[j] = tolower(input[i]);
-        i++;
-        j++;
+    object->pts = malloc(sizeof(point) * object->ptscnt);
+    for (int k = 0; k < object->ptscnt-1; k++) {
+        lex_get_point(&input, object, k, orig_pointer);
     }
-    if (j == 15) {
-        char expstr[128];
-        sprintf(expstr, "встречена длинная последовательность '%s...'", token1);
-        throwError(
-                tempColumnForError,
-                input,
-                "ожидалась строка 'circle', 'triangle' или 'polygon'",
-                expstr);
-        return NULL;
+    if (object->type != Circle) lex_get_last_point(&input, object, orig_pointer);
+    else {
+        lex_get_point(&input, object, object->ptscnt-1, orig_pointer);
+        lex_get_radius(&input, object, orig_pointer);
     }
-    if (!strcmp(token1, "circle")) {
-        s1->type = Circle;
-        s1->ptscnt = 1;
-    } else if (!strcmp(token1, "triangle")) {
-        s1->type = Triangle;
-        s1->ptscnt = 4;
-    } else if (!strcmp(token1, "polygon")) {
-        s1->type = Polygon;
-        s1->ptscnt = 0;
-    } else {
-        char expstr[128];
-        sprintf(expstr, "встречена строка '%s'", token1);
-        throwError(
-                tempColumnForError,
-                input,
-                "ожидалась строка 'circle', 'triangle' или 'polygon'",
-                expstr);
-        return NULL;
-    }
-
-    // Ищем '(', не не находим или находим другое - ошибка
-    while (input[i] == ' ' && input[i] != '\0')
-        i++;
-    if (input[i] == '\0') {
-        throwError(i, input, "ожидалось '('", "встречен конец строки");
-        return NULL;
-    }
-    if (input[i] != '(') {
-        char expstr[64];
-        sprintf(expstr, "встречено '%c'", input[i]);
-        throwError(i, input, "ожидалось '('", expstr);
-        return NULL;
-    }
-    i++;
-
-    // Дальше читаем строку из цифр и максимум одной точки до пробела.
-    // Но если наш аргумент последний, то не забываем проверять ещё и на ')'.
-
-    s1->pts = malloc(sizeof(point) * s1->ptscnt);
-    for (int c = 0; c < s1->ptscnt; c++) {
-        for (int xy = 0; xy < 2; xy++) {
-            while (input[i] == ' ' && input[i] != '\0')
-                i++;
-            float is_negative = 1.0;
-            if (input[i] == '-') {
-                is_negative = -1.0;
-                i++;
-            }
-            if (!isdigit(input[i])) {
-                char expstr[64];
-                sprintf(expstr, "встречено '%c'", input[i]);
-                throwError(i, input, "ожидалась цифра", expstr);
-                return NULL;
-            }
-
-            char digit[128] = {0};
-            int wasThereAPoint = 0;
-            j = 0;
-            while (isdigit(input[i]) || input[i] == '.') {
-                if (input[i] == '.')
-                    wasThereAPoint++;
-                if (wasThereAPoint > 1) {
-                    throwError(
-                            i,
-                            input,
-                            "встречена '.'",
-                            "ожидалась дробная часть");
-                    return NULL;
-                }
-                digit[j] = input[i];
-                j++;
-                i++;
-            }
-            if (!xy)
-                s1->pts[c].x = atof(digit) * is_negative;
-            else
-                s1->pts[c].y = atof(digit) * is_negative;
-        }
-        // ожидаем запятую, если круг или точка последняя
-        // иначе ожидаем ')'
-        if (c != s1->ptscnt - 1 || s1->type == Circle) {
-            while (input[i] == ' ' && input[i] != '\0')
-                i++;
-            if (input[i] == '\0') {
-                throwError(i, input, "ожидалось ','", "встречен конец строки");
-                return NULL;
-            }
-            if (input[i] != ',') {
-                char expstr[64];
-                sprintf(expstr, "встречено '%c'", input[i]);
-                throwError(i, input, "ожидалось ','", expstr);
-                return NULL;
-                return NULL;
-            }
-        }
-        i++;
-    }
-    if (s1->type == Circle) {
-        // вычитываем ещё одно число
-        while (input[i] == ' ' && input[i] != '\0')
-            i++;
-        int is_negative = 1.0;
-        if (input[i] == '-') {
-            is_negative = -1.0;
-            i++;
-        }
-        if (!isdigit(input[i])) {
-            char expstr[64];
-            sprintf(expstr, "встречено '%c'", input[i]);
-            throwError(i, input, "ожидалась цифра", expstr);
-            return NULL;
-        }
-        char digit2[128];
-        int wasThereAPoint = 0;
-        j = 0;
-        while (isdigit(input[i]) || input[i] == '.') {
-            if (input[i] == '.')
-                wasThereAPoint++;
-            if (wasThereAPoint > 1) {
-                throwError(
-                        i, input, "встречена '.'", "ожидалась дробная часть");
-                return NULL;
-            }
-            digit2[j] = input[i];
-            j++;
-            i++;
-        }
-        s1->radius = atof(digit2) * is_negative;
-    }
-
-    // ожидаем закрывающую скобку
-    while (input[i] == ' ' && input[i] != '\0')
-        i++;
-    if (input[i] == '\0') {
-        throwError(i, input, "ожидалось ')'", "встречен конец строки");
-        return NULL;
-    }
-    if (input[i] != ')') {
-        char expstr[64];
-        sprintf(expstr, "встречено '%c'", input[i]);
-        throwError(i, input, "ожидалось ')'", expstr);
-        return NULL;
-    }
-    return s1;
+    return object;
 }
