@@ -8,3 +8,17 @@ obj/src/geometry/main.o
 obj/src/libgeometry/libgeometry.a
 obj/src/libgeometry/shapes.d
 obj/src/libgeometry/shapes.o
+obj/src/libgeometry/parser.d
+.gitignore
+obj/src/libgeometry/lexer.o
+obj/src/libgeometry/lexer.d
+obj/src/libgeometry/parser.o
+obj/src/libgeometry/intersect.d
+obj/src/libgeometry/intersect.o
+obj/src/test/main.d
+obj/src/test/main.o
+obj/src/test/tests.d
+obj/src/test/tests.o
+.exlib-clang-format
+bin/test
+echo

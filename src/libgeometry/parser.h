@@ -14,4 +14,5 @@ typedef struct Shape {
     point* pts;
 } shape;
 
-shape* parseInputString(char* input);
+int parseInputString(char* input, shape* object);
+void print_shapes(shape* shapes, int count);

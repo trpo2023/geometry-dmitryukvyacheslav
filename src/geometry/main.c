@@ -1,30 +1,35 @@
-#include <libgeometry/shapes.h>
+#include <libgeometry/lexer.h>
+#include <libgeometry/parser.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-int main(void)
+
+int main(int argc, char* argv[])
 {
-    printf("1. ");
-    char* buffer = NULL;
-    size_t len;
-    getline(&buffer, &len, stdin);
-
-    shape* s1 = NULL;
-    s1 = parseInputString(buffer);
-    if (s1 == NULL)
-        return -1;
-
-    switch (s1->type) {
-    case Circle:
-        if (s1->radius <= 0) {
-            printf("\tradius is less or equal to 0: not calculating\n");
-        } else {
-            printf("\tperimeter = %.4f\n", 2.0 * M_PI * s1->radius);
-            printf("\tarea = %.4f\n", M_PI * s1->radius * s1->radius);
-        }
-        break;
-    default:
-        printf("not implemented\n");
+    // parseInputString(" triangle (11.1 3.2, 1.2 3.3, 1.433 2.3, 1.2 22) ");
+    FILE* input;
+    if (argc == 1)
+        input = stdin;
+    else
+        input = fopen(argv[1], "r");
+    char strbuf[512];
+    shape* shapes = malloc(sizeof(shapes));
+    if (!shapes) {
+        printf("Could not allocate memory\n");
     }
+    int shapes_index = 0;
+    while (!feof(input)) {
+        if (!realloc(shapes, sizeof(shapes) * (shapes_index + 1))) {
+            printf("Could not allocate memory\n");
+            return 0;
+        };
+        fgets(strbuf, 512, input);
+        if (!parseInputString(strbuf, &(shapes[shapes_index])))
+            shapes_index++;
+        else
+            return -1;
+    }
+    printf("Parsed %d shapes!\n\n", shapes_index);
+    print_shapes(shapes, shapes_index);
     return 0;
 }
