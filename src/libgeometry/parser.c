@@ -25,9 +25,10 @@ int parseInputString(char* input, shape* object)
         if (lex_get_point(&input, object, k, orig_pointer))
             return 1;
     }
-    if (object->type != Circle)
-        lex_get_last_point(&input, object, orig_pointer);
-    else {
+    if (object->type != Circle) {
+        if (lex_get_last_point(&input, object, orig_pointer))
+            return 1;
+    } else {
         if (lex_get_point(&input, object, object->ptscnt - 1, orig_pointer))
             return 1;
         if (lex_get_radius(&input, object, orig_pointer))

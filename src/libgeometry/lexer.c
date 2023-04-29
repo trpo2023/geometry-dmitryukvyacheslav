@@ -100,6 +100,8 @@ lex_get_double(char** line, char delim, char* origptr, int* errflag)
 {
     char buf[64] = {'\0'};
     int read = readTokenUntil(line, delim, buf, origptr);
+    if (read == -1)
+        *errflag = 1;
     char* endptr;
     double d = strtod(buf, &endptr);
     // Evil pointer hack to line up
@@ -109,12 +111,12 @@ lex_get_double(char** line, char delim, char* origptr, int* errflag)
         char errstr[] = "[0-9] or '''";
         errstr[10] = delim;
         char errstr2[] = {*(endptr), '\0'};
+        *errflag = 1;
         expected(
                 (*line - origptr) + (endptr - buf) - read + 1,
                 origptr,
                 errstr,
                 errstr2);
-        *errflag = 1;
     }
     return d;
 }
